@@ -3,6 +3,7 @@
     <string name="action_settings">Réglages</string>
     <string name="quiz_label">Questionnaire</string>
     <string name="main_menu_fragment_label">Menu principal</string>
+    <string name="hello_first_fragment">0</string>
     <string name="first_choice_text">Premier</string>
     <string name="second_choice_text">Deuxième</string>
     <string name="third_choice_text">Troisième</string>

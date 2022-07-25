@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
-        else if (id == R.id.create_quiz) {
+        else if(id == R.id.create_quiz){
             startActivity(new Intent(this, CreateQuestionSet.class));
             return true;
         }

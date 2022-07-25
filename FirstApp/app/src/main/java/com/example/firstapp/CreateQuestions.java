@@ -104,22 +104,33 @@ public class CreateQuestions extends AppCompatActivity implements View.OnClickLi
         addImage.setOnClickListener(this);
 
         // Select Video
-        addVideo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent=new Intent(CreateQuestions.this,VideoSource.class);
-                startActivity(intent);
-            }
-        });
-        addQuestions.setOnClickListener(v -> {
-            Intent moveToWriteQuestions = new Intent(CreateQuestions.this, WriteQuestions.class);
+        addVideo.setOnClickListener(v -> {
+            View customView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.dialogue_choose, null);
+            AppCompatTextView leftPickText = customView.findViewById(R.id.left_pick_text), rightPickText = customView.findViewById(R.id.right_pick_text);
+            AppCompatImageView leftPickIcon = customView.findViewById(R.id.left_pick_icon), rightPickIcon = customView.findViewById(R.id.right_pick_icon);
+            leftPickText.setText(R.string.title_camera);
+            rightPickText.setText(R.string.title_gallery);
+            leftPickIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_photo_camera_black_48dp));
+            rightPickIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_photo_black_48dp));
+            AlertDialog dialogue = new AlertDialog.Builder(CreateQuestions.this)
+                    .setTitle(R.string.title_choose)
+                    .setView(customView)
+                    .setNegativeButton(R.string.action_cancel, null)
+                    .setOnCancelListener(null).create();
+            dialogue.show();
 
-            CreateQuestions.this.startActivity(moveToWriteQuestions);
+            // Handle Record option click
+            customView.findViewById(R.id.left_pick).setOnClickListener(v1 -> {
+                Toast.makeText(this, "This is where we start recording the video innit", Toast.LENGTH_LONG).show();
+                dialogue.dismiss();
+            });
+
+            // Handle Browse option click
+            customView.findViewById(R.id.right_pick).setOnClickListener(v2 -> {
+                getVideoByGallery();
+                dialogue.dismiss();
+            });
         });
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
     }
 
     // Return to previous Activity

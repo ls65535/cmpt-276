@@ -1,5 +1,6 @@
 package com.example.firstapp;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -56,6 +57,7 @@ public class MobileTTS  {
             }
         }
 
+        @SuppressLint("ResourceAsColor")
         @Override
         public void onStart(String s) {
             synchronized (btnQueue) {
@@ -68,6 +70,7 @@ public class MobileTTS  {
             }
         }
 
+        @SuppressLint("ResourceAsColor")
         @Override
         public void onDone(String s) {
             synchronized (btnQueue) {
@@ -123,6 +126,7 @@ public class MobileTTS  {
     //              Hint and remaining Options after incorrect answer.
     // Precondition: TTS option is ON in settings
     // Postcondition: TTS appropriate text strings
+    // Exception: Throws TTSSleepInterruptedException if sleep() got interrupted.
     public void TTSQuestion(TextToSpeech mTTS, HintPlayer player, int questionSetPosition, int questionPosition, boolean firstIncorrect, boolean secondIncorrect, int[] optionNumber) {
         if (player != null)
             player.stopPlayer();
@@ -152,11 +156,14 @@ public class MobileTTS  {
         }
     }
 
-    // Description: TTS of Options, indicates Options of text string.
-    // Precondition: Button is enabled, TTS option is ON in settings
+    // Description: TTS Options, indicates Options of text string.
+    // Precondition: button is enabled
     // Postcondition: TTS appropriate text strings, highlighting Option
     //                of text string
+    // Exceptions: Throws TTSSleepInterruptedException if sleep() got interrupted.
+    @SuppressLint("ResourceAsColor")
     public void TTSQuestionButton(TextToSpeech mTTS, @NonNull Button button, int i, int questionSetPosition, int questionPosition, int[] optionNumber) {
+        //int lastColor=button.getDrawingCacheBackgroundColor();
         if (i == 1) {
             swtichBtnColor = new SwtichBtnColor();
             mTTS.setOnUtteranceProgressListener(swtichBtnColor);
@@ -169,44 +176,48 @@ public class MobileTTS  {
                 if (optionNumber[i-1] == 0)
                     return;
                 optionNumber[i-1] = 0;
-                for (int j = i; j < 4; j++)
+                for (int j = i; j < 4; j++) {
                     --optionNumber[j];
+                }
             }
         }
     }
 
-    // Description: TTS of Option of Button
-    // Precondition: TTS option is ON in settings
-    // Postcondition: TTS appropriate text strings, highlighting Button
     public void TTSQuestionButtonLongClick(TextToSpeech mTTS, @NonNull Button button, int i, int questionSetPosition, int questionPosition, int[] optionNumber) {
         // setOnUtteranceProgressListener is used to follow the progress of voice playback
         if (TTSOn) {
-            HashMap<String, String> params = new HashMap<>();
-            params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, String.valueOf(i));
-            mTTS.speak(context.getString(R.string.option_tts) + optionNumber[i - 1] + ":" + quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getOptions(i - 1), TextToSpeech.QUEUE_ADD, params);
-            mTTS.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                @Override
-                public void onStart(String s) {
-                    // runOnUiThread is used for updating the UI
-                    activity.runOnUiThread(() -> button.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.highlight_button)));
-                }
+            if (button.isEnabled() && button.getVisibility() == View.VISIBLE) {
+                HashMap<String, String> params = new HashMap<>();
+                params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, String.valueOf(i));
+                mTTS.speak(context.getString(R.string.option_tts) + optionNumber[i - 1] + ":" + quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getOptions(i - 1), TextToSpeech.QUEUE_ADD, params);
+                mTTS.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override
+                    public void onStart(String s) {
+                        //runOnUiThread is used for updating the UI
+                        activity.runOnUiThread(() -> button.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.highlight_button)));
+                    }
 
-                @Override
-                public void onDone(String s) {
-                    activity.runOnUiThread(() -> button.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background)));
-                }
+                    @Override
+                    public void onDone(String s) {
+                        activity.runOnUiThread(() -> button.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background)));
+                    }
 
-                @Override
-                public void onError(String s) {
-                    Log.e("ddd", "onError: " );
+                    @Override
+                    public void onError(String s) {
+                        Log.e("ddd", "onError: " );
+                    }
+                });
+            } else {
+                if (optionNumber[i-1] == 0)
+                    return;
+                optionNumber[i-1] = 0;
+                for (int j = i; j < 4; j++) {
+                    --optionNumber[j];
                 }
-            });
+            }
         }
     }
 
-    // Description: Initialises TTS for appropriate language
-    // Precondition: Android system has a valid language, googleTTSPackage is working
-    // Postcondition: Connected TTS to googleTTS
     public TextToSpeech initialiseTextToSpeechEngine(int questionSetPosition, int questionPosition) {
         String googleTtsPackage = "com.google.android.tts";
         mobileTextToSpeech = new TextToSpeech(activity, status -> {
@@ -237,8 +248,9 @@ public class MobileTTS  {
                     Log.e("TTS", "Language not supported, set to default");
                     mobileTextToSpeech.setLanguage(new Locale("en", "GB"));
                 }
-                if (quizModalArrayList != null) {
+                if (quizModalArrayList != null){
                     TTSQuestion(mobileTextToSpeech, null, questionSetPosition, questionPosition, false, false, new int[]{1, 2, 3, 4});
+
                 }
             } else {
                 Log.e("TTS", "Initialisation failed");
@@ -252,12 +264,14 @@ public class MobileTTS  {
     // Description: Displays the Toast with the hint
     // Precondition: The user answered incorrectly,
     // Postcondition: The toast is displayed
-    private void displayToastHint(String hint, boolean secondIncorrect) {
+    private void displayToastHint(String hint, boolean secondIncorrent) {
         if (hintOn) {
-            if (secondIncorrect)
-                Toast.makeText(activity, hint, Toast.LENGTH_LONG).show();
+            int i;
+            if (secondIncorrent)
+                i = Toast.LENGTH_LONG;
             else
-                Toast.makeText(activity, hint, Toast.LENGTH_SHORT).show();
+                i = Toast.LENGTH_SHORT;
+            Toast.makeText(activity, hint, i).show();
         }
     }
 

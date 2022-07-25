@@ -3,6 +3,7 @@
     <string name="action_settings">设置</string>
     <string name="quiz_label">测验</string>
     <string name="main_menu_fragment_label">主菜单</string>
+    <string name="hello_first_fragment">0</string>
     <string name="first_choice_text">第一</string>
     <string name="second_choice_text">第二</string>
     <string name="third_choice_text">第三</string>

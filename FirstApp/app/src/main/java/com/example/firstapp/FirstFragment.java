@@ -39,7 +39,7 @@ import java.util.Objects;
 
 public class FirstFragment extends Fragment {
 
-    private TextView questionTV;
+    private TextView questionTV, questionNumberTV;
     private ImageView questionImage;
     private Button firstBtn, secondBtn, thirdBtn, fourthBtn, menuBtn, nextQuestionBtn, nextQuestionSetBtn, restartQuiz;
     private ArrayList<QuestionSet> quizModalArrayList, changesInWeights;
@@ -47,7 +47,7 @@ public class FirstFragment extends Fragment {
     private MobileTTS mTTS;
     private HintPlayer player;
     private Romanisation r;
-    private int questionSetPosition = 0, questionPosition = 0;
+    private int score = 0, questionSetPosition = 0, questionPosition = 0;
     private boolean firstIncorrect = false, secondIncorrect = false, firstFetch = true;
     private int[] optionNumber = new int[]{1, 2, 3, 4};
 
@@ -60,6 +60,8 @@ public class FirstFragment extends Fragment {
         View fragmentFirstLayout = inflater.inflate(R.layout.fragment_first, container, false);
         // Get the Count and Question TextView
         questionTV = fragmentFirstLayout.findViewById(R.id.question);
+        questionNumberTV = fragmentFirstLayout.findViewById(R.id.question_number);
+        questionNumberTV.setVisibility(View.GONE); // temporarily remove from UI, will remove permanently in Sprint 2
         // Get the Buttons
         firstBtn = fragmentFirstLayout.findViewById(R.id.first_choice);
         secondBtn = fragmentFirstLayout.findViewById(R.id.second_choice);
@@ -154,6 +156,7 @@ public class FirstFragment extends Fragment {
     // Postcondition: TextViews and Image are updated.
     private void setDataToViews() {
         optionNumber = new int[]{1,2,3,4};
+        questionNumberTV.setText(getString(R.string.answered_correctly, score));
         nextQuestionSetBtn.setVisibility(View.GONE);
         nextQuestionBtn.setVisibility(View.GONE);
         firstBtn.setVisibility(View.VISIBLE);
@@ -209,16 +212,22 @@ public class FirstFragment extends Fragment {
         mTTS.TTSQuestion(mobileTTS, player, questionSetPosition, questionPosition, firstIncorrect, secondIncorrect, optionNumber);
     }
 
-    // Description: Reduces number of Options, provides Hint,
+    // Description: Increases Score, reduces number of Options, provides Hint,
     //              sets next Question.
     // Precondition: -
     // Postcondition: Fam I don't even know what to write here atm
     private void optionAction(@NonNull ArrayList<QuestionSet> quizModalArrayList, @NonNull Button button) {
         player.stopPlayer();
         mobileTTS.stop();
-        replaceColours();
-        if (quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() == getButtonPosition(button)) {
+        //Avoid clicking too fast to cause the next page option color did not default to the original color
+        firstBtn.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background));
+        secondBtn.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background));
+        thirdBtn.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background));
+        fourthBtn.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background));
+        if(quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() == getButtonPosition(button)) {
             addErrTimeQuestion(false);
+            ++score;
+            questionNumberTV.setText(getString(R.string.answered_correctly, score));
             displayCorrectAnswer();
         } else if (!firstIncorrect && !secondIncorrect) {
             addErrTimeQuestion(true);
@@ -261,13 +270,13 @@ public class FirstFragment extends Fragment {
         secondBtn.setEnabled(false);
         thirdBtn.setEnabled(false);
         fourthBtn.setEnabled(false);
-        if (quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(firstBtn))
+        if(quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(firstBtn))
             firstBtn.setVisibility(View.GONE);
-        if (quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(secondBtn))
+        if(quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(secondBtn))
             secondBtn.setVisibility(View.GONE);
-        if (quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(thirdBtn))
+        if(quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(thirdBtn))
             thirdBtn.setVisibility(View.GONE);
-        if (quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(fourthBtn))
+        if(quizModalArrayList.get(questionSetPosition).getQuestionArray(questionPosition).getAnswer() != getButtonPosition(fourthBtn))
             fourthBtn.setVisibility(View.GONE);
         nextQuestionBtn.setVisibility(View.VISIBLE);
         nextQuestionBtn.setText(r.input(getString(R.string.tap_to_continue), getActivity()));
@@ -300,9 +309,6 @@ public class FirstFragment extends Fragment {
         questionPosition = 0;
     }
 
-    // Description: Uses biased randomisation to get next question set
-    // Precondition: quizModalArrayList is not empty
-    // Postcondition: Next question set's index is returned
     private int getRandomQuestion() {
         RandomAlgorithm<Integer> rc = new RandomAlgorithm<>();
         for (int i = 0; i < quizModalArrayList.size(); i++)
@@ -310,17 +316,11 @@ public class FirstFragment extends Fragment {
         return rc.next();
     }
 
-    // Description: Adjusts the weights of the question sets
-    // Precondition: The option button is pressed
-    // Postcondition: If correct option decreases weight by 5
-    //                Else increases weight by 5
     private void addErrTimeQuestion(boolean increase) {
-        int weight = 5;
+        int weight = -R.integer.weight_change;
         if (increase)
-            quizModalArrayList.get(questionSetPosition).setWeight(quizModalArrayList.get(questionSetPosition).getWeight()+weight);
-        else
-            quizModalArrayList.get(questionSetPosition).setWeight(quizModalArrayList.get(questionSetPosition).getWeight()-weight);
-        System.out.println("Adjusted weight: " + quizModalArrayList.get(questionSetPosition).getWeight());
+            weight = R.integer.weight_change;
+        quizModalArrayList.get(questionSetPosition).setWeight(quizModalArrayList.get(questionSetPosition).getWeight()+weight);
     }
 
     // Description: Populates quizModalArray with complete QuestionSets from database
@@ -366,12 +366,8 @@ public class FirstFragment extends Fragment {
         });
     }
 
-    // Description: Resets the colours of the buttons after TTS showcase
-    // Precondition: -
-    // Postcondition: Buttons' colours are returned to their original state
-    // Exception: Avoid the presence of other buttons that have not yet finished playing
-    //            or whose colors have not yet returned to their original colors
-    private void replaceColours() {
+    private void replaceColours(){
+        //Avoid the presence of other buttons that have not yet finished playing or whose colors have not yet returned to their original colors
         firstBtn.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background));
         secondBtn.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background));
         thirdBtn.setBackgroundColor(ContextCompat.getColor(MyApplication.getAppContext(), R.color.button_background));
@@ -385,10 +381,6 @@ public class FirstFragment extends Fragment {
     public void onDestroyView() {
         // TODO: Push back new weights into database
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("questionSets");
-        for (int i = 0; i < changesInWeights.size(); i++) {
-            System.out.println("Pushing new weights");
-            System.out.println(changesInWeights.get(i).getId() + ": " + changesInWeights.get(i).getWeight());
-        }
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

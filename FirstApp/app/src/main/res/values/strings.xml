@@ -5,6 +5,7 @@
     <!-- Strings used for fragments for navigation -->
     <string name="quiz_label">Quiz</string>
     <string name="main_menu_fragment_label">Main Menu</string>
+    <string name="hello_first_fragment">0</string>
     <string name="first_choice_text">First</string>
     <string name="second_choice_text">Second</string>
     <string name="third_choice_text">Third</string>

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <resources>
     <integer name="max_characters_in_write_questions">20</integer>
+    <integer name="weight_change">5</integer>
 </resources>

@@ -4,6 +4,7 @@
     <string name="action_settings">ਸੈਟਿੰਗਾਂ</string>
     <string name="quiz_label">ਕਵਿਜ਼</string>
     <string name="main_menu_fragment_label">ਮੁੱਖ ਮੇਨੂ</string>
+    <string name="hello_first_fragment">0</string>
     <string name="first_choice_text">ਪਹਿਲਾਂ</string>
     <string name="second_choice_text">ਦੂਜਾ</string>
     <string name="third_choice_text">ਤੀਜਾ</string>

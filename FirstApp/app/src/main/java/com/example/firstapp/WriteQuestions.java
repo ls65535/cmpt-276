@@ -304,7 +304,7 @@ public class WriteQuestions extends AppCompatActivity {
                         try {
                             mediaRecorder.stop();
                             mediaRecorder.release();
-                        } catch (Exception e) {
+                        } catch (Exception e){
                             e.printStackTrace();
                         }
                         recordVoice.setImageResource(R.drawable.ic_stop_record);
@@ -334,7 +334,7 @@ public class WriteQuestions extends AppCompatActivity {
                         hintUri = Uri.fromFile(getRecordingFile());
                         Uploader u = new Uploader(this, null, databaseReferenceMain, storageRef);
                         System.out.println("The format is " + u.getFileExtension(hintUri));
-                    } catch (Exception e) {
+                    } catch (Exception e){
                         e.printStackTrace();
                     }
                     timeSwapBuff += timeInMilliseconds;
